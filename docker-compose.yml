@@ -1,3 +1,4 @@
+version: '3.8' # Ensure your compose file version is compatible with Coolify
 
 services:
   openhands:
@@ -9,15 +10,23 @@ services:
     environment:
       - SANDBOX_RUNTIME_CONTAINER_IMAGE=${SANDBOX_RUNTIME_CONTAINER_IMAGE:-docker.all-hands.dev/all-hands-ai/runtime:0.27-nikolaik}
       #- SANDBOX_USER_ID=${SANDBOX_USER_ID:-1234} # enable this only if you want a specific non-root sandbox user but you will have to manually adjust permissions of openhands-state for this user
-      - WORKSPACE_MOUNT_PATH=${WORKSPACE_BASE:-$PWD/workspace}
+      - WORKSPACE_MOUNT_PATH=/opt/workspace_base # Fixed path for workspace inside container
     ports:
       - "3000:3000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.openhands-state:/.openhands-state
-      - ${WORKSPACE_BASE:-$PWD/workspace}:/opt/workspace_base
+      - openhands-docker-socket:/var/run/docker.sock # Named volume for Docker socket
+      - openhands-state:/.openhands-state # Named volume for openhands state
+      - openhands-workspace:/opt/workspace_base # Named volume for workspace
     pull_policy: build
     stdin_open: true
     tty: true
+
+volumes: # Define named volumes
+  openhands-docker-socket:
+    driver: local # You might need to adjust driver based on Coolify setup, 'local' is a common default
+  openhands-state:
+    driver: local
+  openhands-workspace:
+    driver: local
